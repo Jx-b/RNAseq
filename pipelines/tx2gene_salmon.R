@@ -1,12 +1,10 @@
-WORKDIR <- 'data/'
-GENOME <- '../align/gencode.v30.annotation.gtf'
-
 args <- commandArgs(trailingOnly = TRUE)
-WORKDIR <- args[1]
-GENOME <- args[2]
+OUTDIR <- file.path(getwd(), args[1]) 
+GENOME <- file.path(getwd(), args[2]) 
+QUANTDIR <- file.path(getwd(), args[3])                      
 
-cat('Setting WORKDIR to:', WORKDIR, '\n' )
-setwd(WORKDIR)
+cat('Setting WORKDIR to:', OUTDIR, '\n' )
+setwd(OUTDIR)
 
 library(readr)
 library(erer)
@@ -30,7 +28,7 @@ if(!file.exists("tx2gene.csv")){
 #tx2gene <- as.data.frame(txdf[,c("tx_id","gene_id")])
 
 #find quant files from salmon
-files <- file.path(getwd(),Sys.glob("../align/salmon_output/SRR*"), "quant.sf")
+files <- Sys.glob(file.path(QUANTDIR,'salmon_output/SRR*','quant.sf'))
 paths <- strsplit(files, '/')
 samples <- sapply(paths, "[[", length(paths[[1]])-1)
 names(files) <- samples
