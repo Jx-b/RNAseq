@@ -1,4 +1,4 @@
 pipelines/quant/*
 pipelines/genome/*
 pipelines/data/*
-*checkpoint.ipynb
+pipelines/.ipynb_checkpoints
