@@ -2,3 +2,4 @@ pipelines/quant/*
 pipelines/genome/*
 pipelines/data/*
 pipelines/.ipynb_checkpoints
+pipelines/aggregate_counts.ipynb
