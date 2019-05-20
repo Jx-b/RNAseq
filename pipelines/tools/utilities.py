@@ -5,6 +5,8 @@ import ftplib, requests, shlex
 import subprocess as sp
 import tools.progressbar as pg
 
+N_CPU = os.cpu_count()
+
 def download_file(url, local_filename):
     with open(local_filename, 'wb') as f:
         response = requests.get(url, stream=True)
