@@ -21,7 +21,7 @@ if SRADIR is None:
     print("You must provide an input directory containing sra files")
     sys.exit()
 elif not os.path.isdir(SRADIR):
-    print("input folder {} not found".format(SRADIR))
+    print(f'input folder {SRADIR} not found')
     sys.exit()
     
 if OUTDIR is None:
@@ -57,7 +57,7 @@ print("Starting Dump")
 for file in sra_files:
     filename = os.path.join(SRADIR, file)
     print('dumping', filename)
-    run_command("fasterq-dump --outdir {} {} -e4".format(OUTDIR, filename))
+    run_command(f'fasterq-dump --outdir {OUTDIR} {filename}')
     
     
 ########## Step 2: QC ##########
@@ -72,4 +72,4 @@ except FileExistsError:
 fastq_files = [f for f in os.listdir(OUTDIR) if f.endswith('.fastq')]
 for fastq in fastq_files:
     filename = os.path.join(OUTDIR,fastq)
-    run_command("fastqc {} --outdir data/fastqc_output".format(filename))
+    run_command(f'fastqc {filename} --outdir data/fastqc_output')

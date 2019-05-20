@@ -28,7 +28,7 @@ if(!file.exists("tx2gene.csv")){
 #tx2gene <- as.data.frame(txdf[,c("tx_id","gene_id")])
 
 #find quant files from salmon
-files <- Sys.glob(file.path(QUANTDIR,'salmon_output/SRR*','quant.sf'))
+files <- Sys.glob(file.path(QUANTDIR,'salmon_output/SRR*','quant.txt'))
 paths <- strsplit(files, '/')
 samples <- sapply(paths, "[[", length(paths[[1]])-1)
 names(files) <- samples
