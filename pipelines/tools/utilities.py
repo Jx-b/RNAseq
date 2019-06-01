@@ -4,6 +4,7 @@ import os, sys
 import ftplib, requests, shlex
 import subprocess as sp
 import tools.progressbar as pg
+import IPython.display
 
 N_CPU = os.cpu_count()
 
@@ -37,6 +38,9 @@ def download_ftp(ftp, path_to_remote_file, local_name):
             ftp.retrbinary('RETR '+path_to_remote_file, callback, blocksize = max(int(int(filesize)/1000),1024*1024))
         ftp.quit() #close session
 
+def display_link(url):
+    raw_html = f'<a href="{url}" target="_blank">{url}</a>'
+    return IPython.display.display(IPython.display.HTML(raw_html))
 
 #helper function to run shell commands
 def run_command(command):
