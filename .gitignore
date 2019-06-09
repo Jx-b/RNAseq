@@ -1,4 +1,8 @@
+.DS_Store
+*/.DS_Store
 pipelines/quant/*
 pipelines/genome/*
 pipelines/data/*
 pipelines/.ipynb_checkpoints
+pipelines/tools/__pycache__
+pipelines/tools/.ipynb_checkpoints
