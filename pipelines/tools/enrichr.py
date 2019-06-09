@@ -60,25 +60,3 @@ def enrichr_term_score(genes, meta='', gmt=''):
 		combined_score = res[4]
 		terms_scores.append((term, combined_score))
 	return terms_scores
-
-
-def perform_PCA(fpkmMatrix, standardize=3, log=True):
-	## preprocessing of the fpkmMatrix
-	if log:
-		fpkmMatrix = np.log10(fpkmMatrix + 1.)
-	if standardize == 2: # standardize along rows/genes
-		fpkmMatrix = zscore(fpkmMatrix, axis=1)
-	elif standardize == 1: # standardize along cols/samples
-		fpkmMatrix = zscore(fpkmMatrix, axis=0)
-
-	## remove genes with NaNs
-	fpkmMatrix = fpkmMatrix[~np.isnan(np.sum(fpkmMatrix, axis=1))]
-
-	pca = PCA(n_components=None)
-	## get variance captured
-	pca.fit(fpkmMatrix.T)
-	variance_explained = pca.explained_variance_ratio_[0:3]
-	variance_explained *= 100
-	## compute PCA and plot
-	pca_transformed = pca.transform(fpkmMatrix.T)
-	return variance_explained, pca_transformed
