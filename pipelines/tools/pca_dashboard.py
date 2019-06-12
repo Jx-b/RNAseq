@@ -29,7 +29,9 @@ class Dash_PCA(dash.Dash):
 
         #Create layout
         self.layout = html.Div([    
-            dcc.Store(id='pca_storage', data={}),
+            dcc.Store(id='projected_data', data= self.projected_data.to_json(orient='split')),
+            dcc.Store(id='variance_explained', data= json.dumps(self.variance_explained.tolist())),
+            dcc.Store(id='components', data= json.dumps(self.components)),
             
             html.Div([
                         html.H4('Feature scaling (zscore)'),
@@ -60,7 +62,7 @@ class Dash_PCA(dash.Dash):
                     ),
                     dcc.Graph(
                             id= 'histo_coef',
-                            figure= self.plot_coef(self.components), 
+                            figure= self.plot_coef(pd.Series(self.components[0], name= 0)), 
                             style= {'grid-area': 'coef'}
                     )
                 ],
@@ -90,7 +92,7 @@ class Dash_PCA(dash.Dash):
                     }
     )
         
-    def perform_pca(self, data, zscore=True):
+    def perform_pca(self, data, zscore=True, max_components=10):
         """Performs principal component analysis on a dataframe"""
         
         if zscore:
@@ -106,8 +108,12 @@ class Dash_PCA(dash.Dash):
         projected_data = pd.DataFrame(pca.transform(norm_data), index= data.index, 
                                       columns= ['PC'+str(i+1) for i in range(len(pca.explained_variance_ratio_))])
         components = pd.DataFrame(pca.components_, columns=norm_data.columns)
+        main_components = []
+        for name, row in components.iterrows():
+            #keep only the components with the highest weights (in absolute value)
+            main_components += [row.reindex(row.abs().sort_values(ascending=False).index)[:min(max_components, len(row))].to_dict()]
 
-        return projected_data, variance_explained, components
+        return projected_data, variance_explained, main_components
         
     def plot_group_pca(self, projected_data, color_by):
         """Plots a 3D scatter plot of 3 consecutive principal components with dots colored by group"""
@@ -154,9 +160,9 @@ class Dash_PCA(dash.Dash):
         layout = go.Layout(
                             title= 'PCA',
                             scene= {
-                                    'xaxis': {'title': f'PC1 ({variance_explained[0]:.2f}% of variance)'},
-                                    'yaxis': {'title': f'PC2 ({variance_explained[1]:.2f}% of variance)'},
-                                    'zaxis': {'title': f'PC3 ({variance_explained[2]:.2f}% of variance)'}
+                                    'xaxis': {'title': f'PC1 ({variance_explained[0]:.2f}%)'},
+                                    'yaxis': {'title': f'PC2 ({variance_explained[1]:.2f}%)'},
+                                    'zaxis': {'title': f'PC3 ({variance_explained[2]:.2f}%)'}
                                     },
                             clickmode= 'event+select',
                             uirevision= True
@@ -181,25 +187,25 @@ class Dash_PCA(dash.Dash):
                 }
         return figure
     
-    def plot_coef(self, components, PC=0, selectedData= None, max_bar_to_plot=10):
+    def plot_coef(self, component, selectedData= None, max_bar_to_plot=10):
         """Plots a bar chart of the coeficient attached to each feature for the selected principal component"""
-        sort_comp = components.sort_values(PC, axis=1, ascending=False)
-        if len(sort_comp.columns)>max_bar_to_plot:
-            sort_comp = sort_comp.iloc[:,:max_bar_to_plot]
+        sort_comp = component.sort_values(ascending=False)
+        if len(sort_comp)>max_bar_to_plot:
+            sort_comp = sort_comp[:max_bar_to_plot]
         if selectedData:
             try:
-                selectedData = [list(sort_comp.columns).index(selectedData)]
+                selectedData = [sort_comp.index.tolist().index(selectedData)]
             except ValueError:
                 selectedData = None
             
         figure= {
                 'data': [go.Bar(
-                    x= sort_comp.columns,
-                    y= sort_comp.iloc[PC,:],
+                    x= sort_comp.index,
+                    y= sort_comp,
                     selectedpoints= selectedData,
                     )],
                 'layout': go.Layout(
-                            title= f'PC{PC+1} Components',
+                            title= f'PC{int(sort_comp.name)+1} Components',
                             clickmode= 'event+select',
                             )
                 }
@@ -237,24 +243,21 @@ def run_dashboard(data, labels):
     
     ### Add Interactivity ###
     @app.callback(
-        dash.dependencies.Output('pca_storage', 'data'),
+        [dash.dependencies.Output('projected_data', 'data'),
+        dash.dependencies.Output('variance_explained', 'data'),
+        dash.dependencies.Output('components', 'data')],
         [dash.dependencies.Input('scaling_radio', 'value')])
     def update_pca(scaling):
         #recompute pca
         zscore = True if scaling == 'On' else False
         projected_data, variance_explained, components = app.perform_pca(data, zscore)
-        pca_results = { 
-            'projected_data': projected_data.to_json(), 
-            'variance_explained': json.dumps(variance_explained.tolist()),
-            'components': components.to_json()
-                      }
-        return pca_results
+        return [projected_data.to_json(orient='split'), json.dumps(variance_explained.tolist()), json.dumps(components)]
         
     @app.callback(
         dash.dependencies.Output('histo_var', 'figure'),
-        [dash.dependencies.Input('pca_storage', 'data')])
-    def update_var_plot(pca_results):
-        variance_explained = json.loads(pca_results['variance_explained'])
+        [dash.dependencies.Input('variance_explained', 'data')])
+    def update_var_plot(variance_explained_json):
+        variance_explained = json.loads(variance_explained_json)
         return app.plot_var(variance_explained)
     
     @app.callback(
@@ -268,24 +271,32 @@ def run_dashboard(data, labels):
     
     @app.callback(
         dash.dependencies.Output('histo_coef', 'figure'),
-        [dash.dependencies.Input('colorby_dropdown', 'value'),
-         dash.dependencies.Input('histo_var', 'selectedData'), 
-         dash.dependencies.Input('pca_storage', 'data')])
-    def update_coef_plot(dropdown_value, selectedPC, pca_results):
+        [dash.dependencies.Input('histo_var', 'selectedData'), 
+         dash.dependencies.Input('components', 'data'),
+         dash.dependencies.Input('colorby_dropdown', 'value')],
+        [dash.dependencies.State('histo_coef', 'figure')])
+    def update_coef_plot(selectedPC, components_json, dropdown_value, current_state):
+        if dash.callback_context.triggered[0]['prop_id'] == 'colorby_dropdown.value':
+            figure = current_state
+            try:
+                selectedpoints = [current_state['data'][0]['x'].index(dropdown_value)]
+            except ValueError:
+                selectedpoints = None
+            figure['data'][0]['selectedpoints'] = selectedpoints
+            return figure
+            
         PC = selectedPC['points'][0]['pointIndex'] if selectedPC else 0
-        #read json data from pca_results
-        components = pd.read_json(pca_results['components'])
-        return app.plot_coef(components, PC, dropdown_value)
+        component_dict = json.loads(components_json)[PC]
+        return app.plot_coef(pd.Series(component_dict, name=PC), dropdown_value)
+
     
     @app.callback(
         dash.dependencies.Output('3d scatter', 'figure'),
         [dash.dependencies.Input('colorby_dropdown', 'value'), 
-         dash.dependencies.Input('pca_storage', 'data')])
-    def update_coloring(dropdown_value, pca_results):
-        #read json data from pca_results
-        projected_data = pd.read_json(pca_results['projected_data'])
-        variance_explained = json.loads(pca_results['variance_explained'])
-        return app.plot_pca(projected_data, variance_explained, app.labelled_data.loc[:,dropdown_value])
+         dash.dependencies.Input('projected_data', 'data'),
+         dash.dependencies.Input('variance_explained', 'data')])
+    def update_scatter(dropdown_value, projected_data_json, variance_explained):
+        return app.plot_pca(pd.read_json(projected_data_json, orient='split'), json.loads(variance_explained), app.labelled_data.loc[:,dropdown_value])
 
     #link table to scatter plot
     @app.callback(
