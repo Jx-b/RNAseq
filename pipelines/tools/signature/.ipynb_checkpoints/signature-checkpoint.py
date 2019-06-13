@@ -12,6 +12,8 @@ import os
 import pandas as pd
 import numpy as np
 from . import geode
+
+"""
 from rpy2.robjects import r, pandas2ri
 pandas2ri.activate()
 
@@ -62,7 +64,7 @@ def limma(dataset, group_A, group_B, data='subset'):
 
 	# Add
 	return pandas2ri.ri2py(r.limma(pandas2ri.py2ri(processed_data['expression']), pandas2ri.py2ri(processed_data['design']))).sort_values('logFC', ascending=False).set_index('gene_symbol')
-
+"""
 #############################################
 ########## 2. CD
 #############################################
@@ -85,10 +87,10 @@ def cd(dataset, group_A, group_B, log=False):
 		data = dataset
 
 	# Calculate CD
-	cd = geode.chdir(data=data.values, sampleclass=sampleclass, genes=dataset.index)
+	cd = geode.chdir(data=data.values, sampleclass=sampleclass, genes=dataset.index, calculate_sig=True, sig_only=False)
 
 	# Create dataframe
-	cd_dataframe = pd.DataFrame(cd, columns=['CD', 'gene_symbol']).set_index('gene_symbol').sort_values('CD', ascending=False)
+	cd_dataframe = pd.DataFrame(cd, columns=['CD', 'gene_symbol', 'significance']).set_index('gene_symbol').sort_values('CD', ascending=False)
 
 	# Return
 	return cd_dataframe
