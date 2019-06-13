@@ -206,6 +206,7 @@ class Dash_PCA(dash.Dash):
                     )],
                 'layout': go.Layout(
                             title= f'PC{int(sort_comp.name)+1} Components',
+                            yaxis= {'title':{'text':'Coefficient'}},
                             clickmode= 'event+select',
                             )
                 }
@@ -271,11 +272,12 @@ def run_dashboard(data, labels):
     
     @app.callback(
         dash.dependencies.Output('histo_coef', 'figure'),
-        [dash.dependencies.Input('histo_var', 'selectedData'), 
-         dash.dependencies.Input('components', 'data'),
+        [dash.dependencies.Input('components', 'data'),
+         dash.dependencies.Input('histo_var', 'selectedData'),
          dash.dependencies.Input('colorby_dropdown', 'value')],
         [dash.dependencies.State('histo_coef', 'figure')])
-    def update_coef_plot(selectedPC, components_json, dropdown_value, current_state):
+    def update_coef_plot(components_json, selectedPC, dropdown_value, current_state):
+        #if the callback is triggered by the dropdown, just update the selected bar
         if dash.callback_context.triggered[0]['prop_id'] == 'colorby_dropdown.value':
             figure = current_state
             try:
@@ -284,8 +286,8 @@ def run_dashboard(data, labels):
                 selectedpoints = None
             figure['data'][0]['selectedpoints'] = selectedpoints
             return figure
-            
-        PC = selectedPC['points'][0]['pointIndex'] if selectedPC else 0
+        #if the callback was triggered by PC selection, show corresponding coefs, else show coefs for PC1
+        PC = selectedPC['points'][0]['pointIndex'] if dash.callback_context.triggered[0]['prop_id'] == 'histo_var.selectedData' else 0
         component_dict = json.loads(components_json)[PC]
         return app.plot_coef(pd.Series(component_dict, name=PC), dropdown_value)
 
