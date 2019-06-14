@@ -19,7 +19,7 @@ import json
 class Dash_PCA(dash.Dash):
     
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-    
+    nb_of_components = 20
     def __init__(self, data, labels):
         super().__init__(__name__, external_stylesheets= self.external_stylesheets)
         self.title = 'PCA analysis'
@@ -92,7 +92,7 @@ class Dash_PCA(dash.Dash):
                     }
     )
         
-    def perform_pca(self, data, zscore=True, max_components=10):
+    def perform_pca(self, data, zscore=True, max_components=nb_of_components):
         """Performs principal component analysis on a dataframe"""
         
         if zscore:
@@ -187,7 +187,7 @@ class Dash_PCA(dash.Dash):
                 }
         return figure
     
-    def plot_coef(self, component, selectedData= None, max_bar_to_plot=10):
+    def plot_coef(self, component, selectedData= None, max_bar_to_plot=nb_of_components):
         """Plots a bar chart of the coeficient attached to each feature for the selected principal component"""
         sort_comp = component.sort_values(ascending=False)
         if len(sort_comp)>max_bar_to_plot:
@@ -307,7 +307,8 @@ def run_dashboard(data, labels):
     def highlight_row(clickData, rows):
         if clickData:
             try:
-                row = rows.index(clickData['points'][0]['text'])
+                clicked_index = app.labels.index.get_loc(clickData['points'][0]['text'])
+                row = rows.index(clicked_index)
             except ValueError:
                 return []
             return [{
