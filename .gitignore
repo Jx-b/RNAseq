@@ -1,5 +1,7 @@
 .DS_Store
 */.DS_Store
+.ipynb_checkpoints
+.__pycache__
 pipelines/quant/*
 pipelines/genome/*
 pipelines/data/*
