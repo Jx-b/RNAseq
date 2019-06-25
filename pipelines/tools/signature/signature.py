@@ -87,7 +87,7 @@ def cd(dataset, group_A, group_B, log=False):
 		data = dataset
 
 	# Calculate CD
-	cd = geode.chdir(data=data.values, sampleclass=sampleclass, genes=dataset.index, calculate_sig=True, sig_only=True)
+	cd = geode.chdir(data=data.values, sampleclass=sampleclass, genes=dataset.index, calculate_sig=True, sig_only=False)
 
 	# Create dataframe
 	cd_dataframe = pd.DataFrame(cd, columns=['CD', 'gene_symbol', 'significance']).set_index('gene_symbol').sort_values('CD', ascending=False)
