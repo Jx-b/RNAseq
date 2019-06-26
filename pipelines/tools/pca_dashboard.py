@@ -144,6 +144,7 @@ class Dash_PCA(dash.Dash):
                             'size': 10,
                             'color': color_by,
                             'colorscale': 'Viridis',
+                            'colorbar': {'len': 0.5},
                             'opacity': .8,
                         },
                         name= color_by.name

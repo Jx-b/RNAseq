@@ -1,13 +1,7 @@
 # utils for RNAseq
 import json
 from time import sleep
-
-import numpy as np
 import requests
-
-from sklearn.decomposition import PCA
-from scipy.stats.mstats import zscore
-
 
 ENRICHR_URL = 'http://amp.pharm.mssm.edu/Enrichr'
 
