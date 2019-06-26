@@ -6,7 +6,7 @@ library(readr)
 library(erer)
 
 #load file conatining mapping of transcripts to genes
-tx2gene <- read_csv(file.path(getwd(), "tx2gene.csv"))
+tx2gene <- read_csv(file.path(DATADIR, "tx2gene.csv"))
 head(tx2gene)
 
 #find quant files from salmon
