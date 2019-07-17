@@ -20,13 +20,15 @@ setwd(QUANTDIR)
 ## import transcript-level estimates
 library(tximport)
 txi <- tximport(files, type="salmon", tx2gene=tx2gene, abundanceCol="TPM", countsFromAbundance= "no")
-write.csv(as.data.frame(txi),file="txi.csv")
+write.csv(as.data.frame(txi$abundance),file="txi_tpm.csv")
+write.csv(as.data.frame(txi$counts),file="txi_counts.csv")
+write.csv(as.data.frame(txi$length),file="txi_length.csv")
 #scaledTPM = TPM * sum(counts) for each sample
 txi_scaledTPM <- tximport(files, type="salmon", tx2gene=tx2gene, abundanceCol="TPM",countsFromAbundance= "scaledTPM")
-write.csv(as.data.frame(txi_scaledTPM),file="txi_scaledTPM.csv")
+write.csv(as.data.frame(txi_scaledTPM$counts),file="txi_scaledTPM_counts.csv")
 #additionally scaled using the average transcript length over samples and the library size (lengthScaledTPM)
 txi_lengthScaledTPM <- tximport(files, type="salmon", tx2gene=tx2gene, abundanceCol="TPM",countsFromAbundance= "lengthScaledTPM")
-write.csv(as.data.frame(txi_lengthScaledTPM),file="txi_lengthScaledTPM.csv")
+write.csv(as.data.frame(txi_lengthScaledTPM$counts),file="txi_lengthScaledTPM_counts.csv")
 
 names(txi)
 head(txi$counts)

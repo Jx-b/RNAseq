@@ -7,3 +7,4 @@ __pycache__
 pipelines/quant/*
 pipelines/genome/*
 pipelines/data/*
+pipelines/glimma-plots/*
